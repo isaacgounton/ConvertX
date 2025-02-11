@@ -114,15 +114,12 @@
                         alert('Please enter an image URL');
                         return;
                     }
+                    const formData = new FormData();
+                    formData.append('url', imageUrl);
+                    formData.append('format', format);
                     response = await fetch('http://localhost:3000/convert-url', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            url: imageUrl,
-                            format: format
-                        })
+                        body: formData
                     });
                 }
 

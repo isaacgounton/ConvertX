@@ -35,7 +35,7 @@ app.get('/health', (req, res) => {
 });
 
 // Convert image from URL
-app.post('/convert-url', express.json(), async (req, res) => {
+app.post('/convert-url', upload.none(), async (req, res) => {
   try {
     const { url, format } = req.body;
 
@@ -43,7 +43,8 @@ app.post('/convert-url', express.json(), async (req, res) => {
       return res.status(400).json({ error: 'No image URL provided' });
     }
 
-    if (!['jpg', 'webp', 'png'].includes(format?.toLowerCase())) {
+    const targetFormat = format?.toLowerCase();
+    if (!['jpg', 'webp', 'png'].includes(targetFormat)) {
       return res.status(400).json({ error: 'Invalid target format. Supported formats: jpg, webp, png' });
     }
 
@@ -53,6 +54,11 @@ app.post('/convert-url', express.json(), async (req, res) => {
       maxContentLength: 10 * 1024 * 1024, // 10MB limit
       timeout: 5000 // 5 second timeout
     });
+
+    // Extract original filename from URL
+    const originalUrl = new URL(url);
+    const originalFilename = path.basename(originalUrl.pathname);
+    const filenameWithoutExt = path.parse(originalFilename).name;
 
     // Process image using Sharp
     const processedImage = await sharp(response.data)
@@ -66,6 +72,7 @@ app.post('/convert-url', express.json(), async (req, res) => {
       'png': 'image/png'
     };
 
+    // Just set the correct content type
     res.set('Content-Type', contentTypes[format]);
     res.send(processedImage);
 
@@ -91,6 +98,9 @@ app.post('/convert', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Invalid target format. Supported formats: jpg, webp, png' });
     }
 
+    // Extract original filename
+    const originalFilename = path.parse(req.file.originalname).name;
+
     // Process image using Sharp
     const processedImage = await sharp(req.file.buffer)
       .toFormat(targetFormat === 'jpg' ? 'jpeg' : targetFormat)
@@ -103,6 +113,7 @@ app.post('/convert', upload.single('image'), async (req, res) => {
       'png': 'image/png'
     };
 
+    // Just set the correct content type
     res.set('Content-Type', contentTypes[targetFormat]);
     res.send(processedImage);
 
