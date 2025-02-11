@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Converter API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 20px;
+            display: none;
+        }
+        .result img {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        select, button {
+            padding: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Converter API Test</h1>
+    <div class="container">
+        <div>
+            <input type="file" id="imageInput" accept="image/*">
+            <select id="formatSelect">
+                <option value="jpg">JPG</option>
+                <option value="webp">WebP</option>
+                <option value="png">PNG</option>
+            </select>
+            <button onclick="convertImage()">Convert</button>
+        </div>
+        <div id="result" class="result">
+            <h3>Converted Image:</h3>
+            <img id="convertedImage" alt="Converted image">
+            <div>
+                <a id="downloadLink" href="#" download>Download Image</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function convertImage() {
+            const fileInput = document.getElementById('imageInput');
+            const format = document.getElementById('formatSelect').value;
+            const resultDiv = document.getElementById('result');
+            const convertedImage = document.getElementById('convertedImage');
+            const downloadLink = document.getElementById('downloadLink');
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch(`http://localhost:3000/convert?format=${format}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Conversion failed');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                convertedImage.src = url;
+                downloadLink.href = url;
+                downloadLink.download = `converted.${format}`;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                alert('Error converting image: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
