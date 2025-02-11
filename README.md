@@ -1,16 +1,25 @@
-# Image Conversion API
+# PixelFlow
 
-A fast and efficient image conversion API built with Node.js and Sharp, supporting conversion between JPG, WebP, and PNG formats.
+A lightweight and high-performance image conversion API built with Node.js and Sharp. Optimized for speed and efficiency, perfect for web applications requiring fast image format conversions.
 
 ## Features
 
-- Convert images between JPG, WebP, and PNG formats
-- Web interface for testing
+- Lightning-fast image conversion using Sharp
+- Supports WebP, JPG, and PNG formats
+- User-friendly web interface
 - REST API endpoints
-- Built with Sharp for optimal performance
+- Memory-efficient processing
 - 10MB file size limit
 - CORS enabled
-- Docker support
+- Dockerized deployment
+
+## Performance
+
+Built with Sharp, which offers:
+- 4-5x faster processing than ImageMagick
+- Minimal memory usage (~7-15MB per instance)
+- Efficient handling of concurrent requests
+- Small disk footprint
 
 ## Local Development
 
@@ -35,19 +44,19 @@ The server will be available at http://localhost:3000
 
 1. Build the Docker image:
 ```bash
-docker build -t image-converter .
+docker build -t pixelflow .
 ```
 
 2. Run the container:
 ```bash
-docker run -p 3000:3000 image-converter
+docker run -p 3000:3000 pixelflow
 ```
 
 ## API Usage
 
 ### Convert Image Endpoint
 
-`POST /convert?format=[jpg|webp|png]`
+`POST /convert?format=[webp|jpg|png]`
 
 Example using curl:
 ```bash
@@ -65,9 +74,15 @@ curl -X POST -F "image=@your-image.jpg" "http://localhost:3000/convert?format=we
 
 ## Coolify Deployment
 
-This application is ready for deployment on Coolify:
+This application is optimized for Coolify deployment:
 
 1. Connect your Git repository to Coolify
 2. Create a new service using the Dockerfile
 3. Configure environment variables if needed
 4. Deploy!
+
+Benefits of this setup:
+- Minimal resource usage
+- Fast startup time
+- Efficient container size
+- Production-ready configuration

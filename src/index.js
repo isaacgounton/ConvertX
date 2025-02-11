@@ -3,7 +3,6 @@ const multer = require('multer');
 const sharp = require('sharp');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,7 +21,7 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Accept images only
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|pnm|pbm|pgm|ppm)$/i)) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
       return cb(new Error('Only image files are allowed!'), false);
     }
     cb(null, true);
@@ -46,10 +45,8 @@ app.post('/convert', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Invalid target format. Supported formats: jpg, webp, png' });
     }
 
-    let processedImage;
-    
-    // Process the image using Sharp
-    processedImage = await sharp(req.file.buffer)
+    // Process image using Sharp
+    const processedImage = await sharp(req.file.buffer)
       .toFormat(targetFormat === 'jpg' ? 'jpeg' : targetFormat)
       .toBuffer();
 
