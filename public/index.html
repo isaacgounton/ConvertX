@@ -16,6 +16,16 @@
             padding: 20px;
             border-radius: 5px;
         }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .switch-input {
+            margin-bottom: 15px;
+        }
         .result {
             margin-top: 20px;
             display: none;
@@ -33,8 +43,26 @@
 <body>
     <h1>Image Converter API Test</h1>
     <div class="container">
-        <div>
+        <div class="switch-input">
+            <label>
+                <input type="radio" name="inputType" value="file" checked onchange="toggleInputType()"> File Upload
+            </label>
+            <label>
+                <input type="radio" name="inputType" value="url" onchange="toggleInputType()"> Image URL
+            </label>
+        </div>
+        
+        <div id="fileInput" class="input-group">
+            <label>Choose an image file:</label>
             <input type="file" id="imageInput" accept="image/*">
+        </div>
+
+        <div id="urlInput" class="input-group" style="display: none;">
+            <label>Enter image URL:</label>
+            <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 5px;">
+        </div>
+
+        <div class="input-group">
             <select id="formatSelect">
                 <option value="webp">WebP</option>
                 <option value="jpg">JPG</option>
@@ -52,6 +80,12 @@
     </div>
 
     <script>
+        function toggleInputType() {
+            const inputType = document.querySelector('input[name="inputType"]:checked').value;
+            document.getElementById('fileInput').style.display = inputType === 'file' ? 'block' : 'none';
+            document.getElementById('urlInput').style.display = inputType === 'url' ? 'block' : 'none';
+        }
+
         async function convertImage() {
             const fileInput = document.getElementById('imageInput');
             const format = document.getElementById('formatSelect').value;
@@ -59,19 +93,38 @@
             const convertedImage = document.getElementById('convertedImage');
             const downloadLink = document.getElementById('downloadLink');
 
-            if (!fileInput.files[0]) {
-                alert('Please select an image first');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
+            const inputType = document.querySelector('input[name="inputType"]:checked').value;
+            let response;
 
             try {
-                const response = await fetch(`http://localhost:3000/convert?format=${format}`, {
-                    method: 'POST',
-                    body: formData
-                });
+                if (inputType === 'file') {
+                    if (!fileInput.files[0]) {
+                        alert('Please select an image file');
+                        return;
+                    }
+                    const formData = new FormData();
+                    formData.append('image', fileInput.files[0]);
+                    response = await fetch(`http://localhost:3000/convert?format=${format}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    const imageUrl = document.getElementById('imageUrl').value;
+                    if (!imageUrl) {
+                        alert('Please enter an image URL');
+                        return;
+                    }
+                    response = await fetch('http://localhost:3000/convert-url', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            url: imageUrl,
+                            format: format
+                        })
+                    });
+                }
 
                 if (!response.ok) {
                     throw new Error('Conversion failed');

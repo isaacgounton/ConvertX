@@ -7,10 +7,19 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
   },
-  "keywords": ["image", "conversion", "api", "sharp", "webp", "jpg", "png"],
+  "keywords": [
+    "image",
+    "conversion",
+    "api",
+    "sharp",
+    "webp",
+    "jpg",
+    "png"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.9",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "multer": "^1.4.5-lts.1",

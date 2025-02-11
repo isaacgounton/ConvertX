@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const sharp = require('sharp');
 const cors = require('cors');
+const axios = require('axios');
 const path = require('path');
 
 const app = express();
@@ -33,7 +34,52 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Convert image endpoint
+// Convert image from URL
+app.post('/convert-url', express.json(), async (req, res) => {
+  try {
+    const { url, format } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: 'No image URL provided' });
+    }
+
+    if (!['jpg', 'webp', 'png'].includes(format?.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid target format. Supported formats: jpg, webp, png' });
+    }
+
+    // Download image
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
+      maxContentLength: 10 * 1024 * 1024, // 10MB limit
+      timeout: 5000 // 5 second timeout
+    });
+
+    // Process image using Sharp
+    const processedImage = await sharp(response.data)
+      .toFormat(format === 'jpg' ? 'jpeg' : format)
+      .toBuffer();
+
+    // Set appropriate content type
+    const contentTypes = {
+      'jpg': 'image/jpeg',
+      'webp': 'image/webp',
+      'png': 'image/png'
+    };
+
+    res.set('Content-Type', contentTypes[format]);
+    res.send(processedImage);
+
+  } catch (error) {
+    console.error('Error processing image URL:', error);
+    if (axios.isAxiosError(error)) {
+      res.status(400).json({ error: 'Failed to fetch image from URL' });
+    } else {
+      res.status(500).json({ error: 'Error processing image' });
+    }
+  }
+});
+
+// Convert image from file upload
 app.post('/convert', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {

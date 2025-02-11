@@ -5,9 +5,10 @@ A lightweight and high-performance image conversion API built with Node.js and S
 ## Features
 
 - Lightning-fast image conversion using Sharp
+- Convert images from file uploads or URLs
 - Supports WebP, JPG, and PNG formats
-- User-friendly web interface
-- REST API endpoints
+- User-friendly web interface with URL input
+- Comprehensive REST API endpoints
 - Memory-efficient processing
 - 10MB file size limit
 - CORS enabled
@@ -54,13 +55,32 @@ docker run -p 3000:3000 pixelflow
 
 ## API Usage
 
-### Convert Image Endpoint
+### 1. Convert from File Upload
 
 `POST /convert?format=[webp|jpg|png]`
 
 Example using curl:
 ```bash
 curl -X POST -F "image=@your-image.jpg" "http://localhost:3000/convert?format=webp" --output converted.webp
+```
+
+### 2. Convert from URL
+
+`POST /convert-url`
+
+Example using curl:
+```bash
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"url":"https://example.com/image.jpg","format":"webp"}' \
+     "http://localhost:3000/convert-url" --output converted.webp
+```
+
+Request body:
+```json
+{
+  "url": "https://example.com/image.jpg",
+  "format": "webp"  // webp, jpg, or png
+}
 ```
 
 ### Health Check Endpoint
