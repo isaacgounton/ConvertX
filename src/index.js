@@ -82,13 +82,21 @@ app.post('/convert-audio', upload.single('audio'), async (req, res) => {
     require('fs').unlinkSync(inputPath);
     require('fs').unlinkSync(outputPath);
 
-    // Set appropriate content type
+    // Get original filename without extension
+    const originalFilename = path.parse(req.file.originalname).name;
+    const newFilename = `${originalFilename}.${targetFormat}`;
+
+    // Set appropriate headers
     const contentTypes = {
       'mp3': 'audio/mpeg',
       'ogg': 'audio/ogg'
     };
 
-    res.set('Content-Type', contentTypes[targetFormat]);
+    res.set({
+      'Content-Type': contentTypes[targetFormat],
+      'Content-Disposition': `attachment; filename="${newFilename}"`,
+      'X-Original-Filename': newFilename
+    });
     res.send(convertedBuffer);
 
   } catch (error) {

@@ -234,10 +234,11 @@
 
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
+                const filename = response.headers.get('X-Original-Filename') || `converted.${format}`;
                 
                 convertedAudio.src = url;
                 downloadLink.href = url;
-                downloadLink.download = `converted.${format}`;
+                downloadLink.download = filename;
                 resultDiv.style.display = 'block';
             } catch (error) {
                 alert('Error converting audio: ' + error.message);
