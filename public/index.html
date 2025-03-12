@@ -38,11 +38,38 @@
             padding: 8px;
             margin: 10px 0;
         }
+        .tab-buttons {
+            margin-bottom: 20px;
+        }
+        .tab-buttons button {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .tab-buttons button.active {
+            background: #fff;
+            border-bottom: 2px solid #000;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Image Converter API Test</h1>
-    <div class="container">
+    <h1>Media Converter API Test</h1>
+    <div class="tab-buttons">
+        <button onclick="switchTab('image')" id="imageTab" class="active">Image Conversion</button>
+        <button onclick="switchTab('audio')" id="audioTab">Audio Conversion</button>
+    </div>
+    <div id="imageContent" class="container tab-content active">
         <div class="switch-input">
             <label>
                 <input type="radio" name="inputType" value="file" checked onchange="toggleInputType()"> File Upload
@@ -79,7 +106,43 @@
         </div>
     </div>
 
+    <div id="audioContent" class="container tab-content">
+        <div class="input-group">
+            <label>Choose an audio file (MP3 or OGG, max 1MB):</label>
+            <input type="file" id="audioInput" accept=".mp3,.ogg">
+        </div>
+
+        <div class="input-group">
+            <label>Convert to:</label>
+            <select id="audioFormatSelect">
+                <option value="mp3">MP3</option>
+                <option value="ogg">OGG</option>
+            </select>
+            <button onclick="convertAudio()">Convert</button>
+        </div>
+
+        <div id="audioResult" class="result">
+            <h3>Converted Audio:</h3>
+            <audio id="convertedAudio" controls></audio>
+            <div>
+                <a id="audioDownloadLink" href="#" download>Download Audio</a>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function switchTab(tab) {
+            // Update buttons
+            document.getElementById('imageTab').classList.remove('active');
+            document.getElementById('audioTab').classList.remove('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+
+            // Update content
+            document.getElementById('imageContent').classList.remove('active');
+            document.getElementById('audioContent').classList.remove('active');
+            document.getElementById(tab + 'Content').classList.add('active');
+        }
+
         function toggleInputType() {
             const inputType = document.querySelector('input[name="inputType"]:checked').value;
             document.getElementById('fileInput').style.display = inputType === 'file' ? 'block' : 'none';
@@ -136,6 +199,48 @@
                 resultDiv.style.display = 'block';
             } catch (error) {
                 alert('Error converting image: ' + error.message);
+            }
+        }
+        async function convertAudio() {
+            const fileInput = document.getElementById('audioInput');
+            const format = document.getElementById('audioFormatSelect').value;
+            const resultDiv = document.getElementById('audioResult');
+            const convertedAudio = document.getElementById('convertedAudio');
+            const downloadLink = document.getElementById('audioDownloadLink');
+
+            if (!fileInput.files[0]) {
+                alert('Please select an audio file');
+                return;
+            }
+
+            if (fileInput.files[0].size > 1024 * 1024) {
+                alert('File size must be less than 1MB');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('audio', fileInput.files[0]);
+
+                const response = await fetch(`http://localhost:3000/convert-audio?format=${format}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Conversion failed');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                convertedAudio.src = url;
+                downloadLink.href = url;
+                downloadLink.download = `converted.${format}`;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                alert('Error converting audio: ' + error.message);
             }
         }
     </script>

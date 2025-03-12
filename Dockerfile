@@ -15,8 +15,8 @@ COPY . .
 # Production stage
 FROM node:20-alpine
 
-# Install Sharp's runtime dependencies
-RUN apk add --no-cache vips-dev
+# Install Sharp's runtime dependencies and FFmpeg
+RUN apk add --no-cache vips-dev ffmpeg
 
 # Create app directory
 WORKDIR /app

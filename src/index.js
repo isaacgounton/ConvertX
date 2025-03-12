@@ -4,6 +4,7 @@ const sharp = require('sharp');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,14 +19,83 @@ app.use(cors());
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 1 * 1024 * 1024, // 1MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Accept images only
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-      return cb(new Error('Only image files are allowed!'), false);
+    // Accept images and audio files
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|mp3|ogg)$/i)) {
+      return cb(new Error('Only image and audio (MP3, OGG) files are allowed!'), false);
     }
     cb(null, true);
+  }
+});
+
+// Conversion lock mechanism
+let isConverting = false;
+
+// Audio conversion endpoint
+app.post('/convert-audio', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file uploaded' });
+    }
+
+    if (isConverting) {
+      return res.status(429).json({ error: 'Another conversion is in progress. Please try again later.' });
+    }
+
+    const sourceFormat = path.extname(req.file.originalname).toLowerCase().substring(1);
+    const targetFormat = req.query.format?.toLowerCase();
+
+    // Validate formats
+    if (!['mp3', 'ogg'].includes(sourceFormat) || !['mp3', 'ogg'].includes(targetFormat)) {
+      return res.status(400).json({ error: 'Invalid format. Supported formats: mp3, ogg' });
+    }
+
+    if (sourceFormat === targetFormat) {
+      return res.status(400).json({ error: 'Source and target formats are the same' });
+    }
+
+    isConverting = true;
+
+    // Create temporary file paths
+    const inputPath = path.join(__dirname, `temp_input.${sourceFormat}`);
+    const outputPath = path.join(__dirname, `temp_output.${targetFormat}`);
+
+    // Write buffer to temporary file
+    require('fs').writeFileSync(inputPath, req.file.buffer);
+
+    // Process audio using fluent-ffmpeg
+    await new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(inputPath)
+        .toFormat(targetFormat)
+        .on('end', resolve)
+        .on('error', reject)
+        .save(outputPath);
+    });
+
+    // Read the converted file
+    const convertedBuffer = require('fs').readFileSync(outputPath);
+
+    // Clean up temporary files
+    require('fs').unlinkSync(inputPath);
+    require('fs').unlinkSync(outputPath);
+
+    // Set appropriate content type
+    const contentTypes = {
+      'mp3': 'audio/mpeg',
+      'ogg': 'audio/ogg'
+    };
+
+    res.set('Content-Type', contentTypes[targetFormat]);
+    res.send(convertedBuffer);
+
+  } catch (error) {
+    console.error('Error processing audio:', error);
+    res.status(500).json({ error: 'Error processing audio' });
+  } finally {
+    isConverting = false;
   }
 });
 

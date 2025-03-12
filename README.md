@@ -1,166 +1,212 @@
-# PixelFlow
+# PixelFlow API Documentation
 
-A lightweight and high-performance image conversion API built with Node.js and Sharp. Optimized for speed and efficiency, perfect for web applications requiring fast image format conversions.
+## HTTP Request Format
 
-## Features
+### Convert from URL
 
-- Lightning-fast image conversion using Sharp
-- Convert images from file uploads or URLs
-- Supports WebP, JPG, and PNG formats
-- User-friendly web interface with URL input
-- REST API with binary image responses
-- Memory-efficient processing
-- 10MB file size limit
-- CORS enabled
-- Dockerized deployment
-
-## Performance
-
-Built with Sharp, which offers:
-- 4-5x faster processing than ImageMagick
-- Minimal memory usage (~7-15MB per instance)
-- Efficient handling of concurrent requests
-- Small disk footprint
-
-## Local Development
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Start development server:
-```bash
-npm run dev
-```
-
-3. Start production server:
-```bash
-npm start
-```
-
-The server will be available at http://localhost:3000
-
-## Docker Deployment
-
-1. Build the Docker image:
-```bash
-docker build -t pixelflow .
-```
-
-2. Run the container:
-```bash
-docker run -p 3000:3000 pixelflow
-```
-
-## API Usage
-
-### Response Format
-All successful image conversion endpoints return:
-- Appropriate Content-Type header (`image/jpeg`, `image/webp`, or `image/png`)
-- Raw image data in the requested format
-- No forced download headers - client decides how to handle the response
-
-### 1. Convert from File Upload
-
-**Endpoint:** `POST /convert`
+**Endpoint:** `POST http://localhost:3000/convert-url`
 
 **Headers:**
-- `Content-Type: multipart/form-data`
-
-**Query Parameters:**
-- `format` (required): `webp`, `jpg`, or `png`
-
-**Request Body:**
-- Form data with key `image` containing the image file
-- Maximum file size: 10MB
-- Supported inputs: JPG, JPEG, PNG, GIF, WebP
-
-**Example Request:**
-```bash
-# Save response as file
-curl -X POST \
-     -F "image=@input.jpg" \
-     "http://localhost:3000/convert?format=webp" \
-     --output output.webp
-
-# Process in Node.js
-const formData = new FormData();
-formData.append('image', imageFile);
-
-const response = await fetch('http://localhost:3000/convert?format=webp', {
-  method: 'POST',
-  body: formData
-});
-
-const buffer = await response.arrayBuffer();
 ```
-
-### 2. Convert from URL
-
-**Endpoint:** `POST /convert-url`
-
-**Headers:**
-- `Content-Type: multipart/form-data`
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+```
 
 **Form Fields:**
-- `url` (required): URL of the image to convert
-- `format` (required): `webp`, `jpg`, or `png`
+- `url`: URL of the image to convert
+- `format`: Target format (webp, jpg, or png)
 
-**Example Request:**
+**Raw HTTP Request:**
+```http
+POST /convert-url HTTP/1.1
+Host: localhost:3000
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="url"
+
+https://example.com/image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="format"
+
+webp
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+```
+
+**Implementation Examples:**
+
+1. cURL:
 ```bash
-# Save response as file
 curl -X POST \
      -F "url=https://example.com/image.jpg" \
      -F "format=webp" \
      "http://localhost:3000/convert-url" \
      --output output.webp
+```
 
-# Process in Node.js
+2. Python - requests:
+```python
+import requests
+
+files = {
+    'url': (None, 'https://example.com/image.jpg'),
+    'format': (None, 'webp')
+}
+
+response = requests.post(
+    'http://localhost:3000/convert-url',
+    files=files
+)
+
+# Save the image
+with open('output.webp', 'wb') as f:
+    f.write(response.content)
+```
+
+3. PHP - cURL:
+```php
+<?php
+$ch = curl_init();
+
+$data = [
+    'url' => 'https://example.com/image.jpg',
+    'format' => 'webp'
+];
+
+curl_setopt($ch, CURLOPT_URL, 'http://localhost:3000/convert-url');
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+// Save the image
+file_put_contents('output.webp', $response);
+?>
+```
+
+4. JavaScript - Fetch:
+```javascript
 const formData = new FormData();
 formData.append('url', 'https://example.com/image.jpg');
 formData.append('format', 'webp');
 
-const response = await fetch('http://localhost:3000/convert-url', {
-  method: 'POST',
-  body: formData
+fetch('http://localhost:3000/convert-url', {
+    method: 'POST',
+    body: formData
+})
+.then(response => response.blob())
+.then(blob => {
+    // Save the image
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'output.webp';
+    a.click();
 });
-
-const buffer = await response.arrayBuffer();
 ```
 
-### Error Responses
+5. Axios:
+```javascript
+const formData = new FormData();
+formData.append('url', 'https://example.com/image.jpg');
+formData.append('format', 'webp');
+
+axios({
+    method: 'post',
+    url: 'http://localhost:3000/convert-url',
+    data: formData,
+    responseType: 'arraybuffer'
+})
+.then(response => {
+    fs.writeFileSync('output.webp', response.data);
+});
+```
+
+### Convert from File
+
+**Endpoint:** `POST http://localhost:3000/convert?format=webp`
+
+**Headers:**
+```
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+```
+
+**Query Parameters:**
+- `format`: Target format (webp, jpg, or png)
+
+**Form Fields:**
+- `image`: The image file to convert
+
+**Raw HTTP Request:**
+```http
+POST /convert?format=webp HTTP/1.1
+Host: localhost:3000
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="input.jpg"
+Content-Type: image/jpeg
+
+[Binary file data here]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+```
+
+**Implementation Examples:**
+
+1. cURL:
+```bash
+curl -X POST \
+     -F "image=@input.jpg" \
+     "http://localhost:3000/convert?format=webp" \
+     --output output.webp
+```
+
+2. Python - requests:
+```python
+import requests
+
+files = {
+    'image': open('input.jpg', 'rb')
+}
+
+response = requests.post(
+    'http://localhost:3000/convert',
+    params={'format': 'webp'},
+    files=files
+)
+
+with open('output.webp', 'wb') as f:
+    f.write(response.content)
+```
+
+### Response
+
+The API returns the converted image directly in the response body with the appropriate Content-Type header:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: image/webp
+Content-Length: 12345
+
+[Binary image data]
+```
+
+The response is always the raw image data that you can:
+1. Save directly to a file
+2. Process as a binary buffer
+3. Display in a browser
+4. Stream to another service
+
+### Error Response
+
 When an error occurs, the API returns a JSON response:
-```json
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
 {
-  "error": "Error message here"
+    "error": "Error message here"
 }
 ```
-
-Common error scenarios:
-- Invalid format specified
-- File too large (>10MB)
-- Invalid image file
-- Failed to fetch URL
-- Processing error
-
-### Web Interface
-A user-friendly web interface is available at `http://localhost:3000` for testing the API.
-
-## Environment Variables
-
-- `PORT`: Server port (default: 3000)
-- `NODE_ENV`: Node environment (development/production)
-
-## Coolify Deployment
-
-1. Connect your Git repository to Coolify
-2. Create a new service using the Dockerfile
-3. Configure environment variables if needed
-4. Deploy!
-
-Benefits:
-- Minimal resource usage
-- Fast startup time
-- Efficient container size
-- Production-ready configuration
