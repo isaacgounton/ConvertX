@@ -23,8 +23,8 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Accept images and audio files
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|mp3|ogg)$/i)) {
-      return cb(new Error('Only image and audio (MP3, OGG) files are allowed!'), false);
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|mp3|ogg|oga)$/i)) {
+      return cb(new Error('Only image and audio (MP3, OGG, OGA) files are allowed!'), false);
     }
     cb(null, true);
   }
@@ -48,8 +48,8 @@ app.post('/convert-audio', upload.single('audio'), async (req, res) => {
     const targetFormat = req.query.format?.toLowerCase();
 
     // Validate formats
-    if (!['mp3', 'ogg'].includes(sourceFormat) || !['mp3', 'ogg'].includes(targetFormat)) {
-      return res.status(400).json({ error: 'Invalid format. Supported formats: mp3, ogg' });
+    if (!['mp3', 'ogg', 'oga'].includes(sourceFormat) || !['mp3', 'ogg', 'oga'].includes(targetFormat)) {
+      return res.status(400).json({ error: 'Invalid format. Supported formats: mp3, ogg, oga' });
     }
 
     if (sourceFormat === targetFormat) {
@@ -89,7 +89,8 @@ app.post('/convert-audio', upload.single('audio'), async (req, res) => {
     // Set appropriate headers
     const contentTypes = {
       'mp3': 'audio/mpeg',
-      'ogg': 'audio/ogg'
+      'ogg': 'audio/ogg',
+      'oga': 'audio/ogg'
     };
 
     res.set({

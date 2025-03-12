@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Converter API Test</title>
+    <title>Image Converter API</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -108,8 +108,8 @@
 
     <div id="audioContent" class="container tab-content">
         <div class="input-group">
-            <label>Choose an audio file (MP3 or OGG, max 1MB):</label>
-            <input type="file" id="audioInput" accept=".mp3,.ogg">
+            <label>Choose an audio file (MP3, OGG, or OGA, max 1MB):</label>
+            <input type="file" id="audioInput" accept=".mp3,.ogg,.oga">
         </div>
 
         <div class="input-group">
@@ -117,6 +117,7 @@
             <select id="audioFormatSelect">
                 <option value="mp3">MP3</option>
                 <option value="ogg">OGG</option>
+                <option value="oga">OGA</option>
             </select>
             <button onclick="convertAudio()">Convert</button>
         </div>
